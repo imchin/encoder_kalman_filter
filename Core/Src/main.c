@@ -334,7 +334,57 @@ int GetRealdegree(){
 int GetRealrad(){
 	return (roundOfencoder*2*3.1415926535897932384626)+(htim2.Instance->CNT*2*3.1415926535897932384626)/2399;
 }
+
+double t= 0.00001;
+double StateTheta=0;
+double StateOmega=0;
+double ThetaPre=0;
+double OmegaPre=0;
+double YTheta_telda=0;
+
+double CP11 =0;
+double CP12 =0;
+double CP21 =0;
+double CP22 =0;
+
+
+double CPpre11 =0;
+double CPpre12 =0;
+double CPpre21 =0;
+double CPpre22 =0;
+
+double G=pow(7,2);
+double R=pow(7,2);
+
+double K11=0;
+double K21=0;
+
+
+double ThetaPredict=0;
+double OmegaPredict=0;
 void Kalman(){
+	StateTheta= ThetaPre  + (OmegaPre * t);
+	StateOmega= OmegaPre;
+	YTheta_telda = GetRealrad() - ThetaPre;
+	CP11= CPpre11 + (CPpre12 * t) + (CPpre22*pow(t,2)) + (CPpre21*t) + (  (G*pow(t,4)/4 )   );
+
+	CP12 = CPpre12 + (CPpre22*t) +(  (G*pow(t,3)/2 )   );
+
+	CP21 = (  (G*pow(t,3)/2 )   ) + (CPpre22*t) + CPpre21;
+
+	CP22 = CPpre22 + (G*pow(t,2));
+
+	K11= CP11/(CP11+R);
+	K21=CP21/(CP11+R);
+
+	ThetaPredict= StateTheta + (YTheta_telda*K11);
+	OmegaPredict= StateOmega + (YTheta_telda*K21);
+
+	CPpre11= -1*(  (CP11/(CP11+R) ) -1)*CP11;
+	CPpre12= -1*(  (CP11/(CP11+R) ) -1)* CP12;
+	CPpre21= CP21 - (  (CP21*CP11)/(CP11+R)    );
+
+	CPpre22= CP22 -  (  (CP12*CP21)/(CP11+R)    );
 
 }
 //timer interrupt callback
