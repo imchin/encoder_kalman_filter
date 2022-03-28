@@ -32,3 +32,11 @@
   โดยดูการ Unwarp จาก ความแตกต่างของ encoder counter โดยตัดจากค่า Threshold Counter Period/2
   
   ดูสมการเต็มได้ที่ Scr/main.c Unwarp()
+  
+  ### Kalman()
+  Kalman filterCode โดย ฟังก์ชั่นนี้จะถูกเรียนใน timer interrupt routine
+  
+  โดยสมการถูกปรับให้อยู่ในรูป Control loop โดยอ้างอิงจาก https://github.com/imchin/KalmanFilter_encoder
+  
+  
+  
