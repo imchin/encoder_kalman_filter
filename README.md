@@ -22,11 +22,11 @@
         และ set period ที่ 100 CCR และเปิด global interrupt จะได้ ISR ทุกๆ 1000 microsec
   
   ## Include function
-  ### GetRealdegree()
+  ### GetRealdegrees()
   return Degree ที่ผ่านการUnwrap
-  ### GetRealrad()
+  ### GetRealrads()
   return Rad ที่ผ่านการUnwrap
-  ### Unwarp()
+  ### Unwrap()
   Unwrap โดยดูค่า encoder counter จาก register ของ timer2
  
   โดยดูการ Unwarp จาก ความแตกต่างของ encoder counter โดยตัดจากค่า Threshold Counter Period/2
