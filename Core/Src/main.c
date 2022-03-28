@@ -45,7 +45,11 @@ TIM_HandleTypeDef htim5;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+float Nowdegrees = 0;
+float Nowrads =0;
 
+float GetRealdegrees();
+float GetRealrads();
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -96,12 +100,18 @@ int main(void)
   MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
 
+  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
+  HAL_TIM_Base_Start_IT(&htim5);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+	  Nowdegrees=GetRealdegrees();
+	  Nowrads=GetRealrads();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -177,7 +187,7 @@ static void MX_TIM2_Init(void)
   htim2.Init.Period = 2399;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
   sConfig.IC1Polarity = TIM_ICPOLARITY_FALLING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
@@ -314,25 +324,29 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+
+
 int diffen=0;
 uint16_t ennow=0;
 uint16_t enpre=0;
 int roundOfencoder=0;
-void Unwarp(){
+void Unwrap(){
 	ennow=htim2.Instance->CNT;
 	diffen=ennow-enpre;
 	if(diffen>1200){
-		roundOfencoder=roundOfencoder+1;
-	}else if (-diffen>1200) {
 		roundOfencoder=roundOfencoder-1;
+	}else if (-diffen>1200) {
+		roundOfencoder=roundOfencoder+1;
 	}
 	enpre=ennow;
 }
-int GetRealdegree(){
-	return (roundOfencoder*360)+(htim2.Instance->CNT*360)/2399;
+float GetRealdegrees(){
+
+	return (roundOfencoder*360)+ ((htim2.Instance->CNT*360.00)/2399.00);
 }
-int GetRealrad(){
-	return (roundOfencoder*2*3.1415926535897932384626)+(htim2.Instance->CNT*2*3.1415926535897932384626)/2399;
+float GetRealrads(){
+	return (roundOfencoder*2*3.1415926535897932384626)+( (htim2.Instance->CNT*2*3.1415926535897932384626)/2399.00);
 }
 
 double t= 0.00001;
@@ -365,7 +379,7 @@ double OmegaPredict=0;
 void Kalman(){
 	StateTheta= ThetaPre  + (OmegaPre * t);
 	StateOmega= OmegaPre;
-	YTheta_telda = GetRealrad() - ThetaPre;
+	YTheta_telda = GetRealrads() - ThetaPre;
 	CP11= CPpre11 + (CPpre12 * t) + (CPpre22*pow(t,2)) + (CPpre21*t) + (  (G*pow(t,4)/4 )   );
 
 	CP12 = CPpre12 + (CPpre22*t) +(  (G*pow(t,3)/2 )   );
@@ -390,7 +404,8 @@ void Kalman(){
 //timer interrupt callback
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if (htim == &htim5){
-		Unwarp();
+		Unwrap();
+		Kalman();
 	}
 }
 /* USER CODE END 4 */
