@@ -42,6 +42,7 @@
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim5;
+TIM_HandleTypeDef htim9;
 
 UART_HandleTypeDef huart2;
 
@@ -56,6 +57,12 @@ int PWM=3000;
 void Drivemotor();
 
 int PWMm=0;
+
+
+//for uart
+uint8_t datauartSetup[]={73,109,64,99,0b00010001, 16,1,1,42,42, 64,8,8,8,8,8,8,8,8,42,42, 8,64,42,42, 242,77,97,8,99,104,105,78,42,126, 42,42,16,1,1, 126,126};
+uint8_t datauartSetup2[]={73,109,64,99,0b00010010, 8,43,42,42 , 242,32,77,97,8,99,104,105,78,42,126, 42,42, 18,88,42,42 ,111,32,32,32,32,42,42, 222,64,64,64,64,64,64,64,64,42,42, 8,42,   126,126};
+void sendUartToROS2();
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -63,8 +70,9 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM2_Init(void);
-static void MX_TIM5_Init(void);
 static void MX_TIM1_Init(void);
+static void MX_TIM5_Init(void);
+static void MX_TIM9_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -104,13 +112,16 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_TIM2_Init();
-  MX_TIM5_Init();
   MX_TIM1_Init();
+  MX_TIM5_Init();
+  MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
   HAL_TIM_Base_Start_IT(&htim5);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+
+  HAL_TIM_Base_Start_IT(&htim9);
 
   /* USER CODE END 2 */
 
@@ -122,6 +133,11 @@ int main(void)
 	  Nowdegrees=GetRealdegrees();
 	  Nowrads=GetRealrads();
 	  Drivemotor(PWMm);
+
+
+
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -343,6 +359,44 @@ static void MX_TIM5_Init(void)
 }
 
 /**
+  * @brief TIM9 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM9_Init(void)
+{
+
+  /* USER CODE BEGIN TIM9_Init 0 */
+
+  /* USER CODE END TIM9_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+
+  /* USER CODE BEGIN TIM9_Init 1 */
+
+  /* USER CODE END TIM9_Init 1 */
+  htim9.Instance = TIM9;
+  htim9.Init.Prescaler = 99;
+  htim9.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim9.Init.Period = 9999;
+  htim9.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim9.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim9) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim9, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM9_Init 2 */
+
+  /* USER CODE END TIM9_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -522,6 +576,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if (htim == &htim5){
 		Unwrap();
 		Kalman();
+	}else if(htim == &htim9){
+		sendUartToROS2();
 	}
 }
 
@@ -577,10 +633,26 @@ void Drivemotor(int PWM){
 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7,1);
 	}
 
+}
+
+
+
+
+//Mark_serial_protocol
+void sendUartToROS2(){
+	static uint8_t q=0;
+
+	datauartSetup[6]=0; //high byte
+	datauartSetup[7]=q; //low byte
+//	HAL_UART_Transmit_IT(&huart2, datauartSetup2, sizeof(datauartSetup2));
+//
+//	HAL_UART_Transmit_IT(&huart2, datauartSetup, sizeof(datauartSetup));
+	q=(q+1)%255;
+
+
 
 
 }
-
 
 
 
