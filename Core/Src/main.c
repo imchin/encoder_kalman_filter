@@ -62,6 +62,8 @@ int PWMm=0;
 //for uart
 uint8_t datauartSetup[]={73,109,64,99,0b00010001, 16,1,1,42,42, 64,8,8,8,8,8,8,8,8,42,42, 8,64,42,42, 242,77,97,8,99,104,105,78,42,126, 42,42,16,1,1, 126,126};
 uint8_t datauartSetup2[]={73,109,64,99,0b00010010, 8,43,42,42 , 242,32,77,97,8,99,104,105,78,42,126, 42,42, 18,88,42,42 ,111,32,32,32,32,42,42, 222,64,64,64,64,64,64,64,64,42,42, 8,42,   126,126};
+//uint8_t datauartEncoder[]={73,109,64,99,0b00010011, 222,0,0,0,0,0,0,0,0,42,42 ,222,0,0,0,0,0,0,0,0,126,126};
+uint8_t datauartEncoder[]={73,109,64,99,0b00010011, 16,1,1,126,126};
 void sendUartToROS2();
 /* USER CODE END PV */
 
@@ -637,16 +639,34 @@ void Drivemotor(int PWM){
 
 
 
-
+uint16_t value=0;
 //Mark_serial_protocol
 void sendUartToROS2(){
 	static uint8_t q=0;
 
-	datauartSetup[6]=0; //high byte
-	datauartSetup[7]=q; //low byte
+//	datauartSetup[6]=0; //high byte
+//	datauartSetup[7]=q; //low byte
 //	HAL_UART_Transmit_IT(&huart2, datauartSetup2, sizeof(datauartSetup2));
 //
 //	HAL_UART_Transmit_IT(&huart2, datauartSetup, sizeof(datauartSetup));
+
+//	datauartEncoder[6]=((uint64_t)ThetaPre>>56) &0b11111111;
+//	datauartEncoder[7]=((uint64_t)ThetaPre>>48) &0b11111111;
+//	datauartEncoder[8]=((uint64_t)ThetaPre>>40)&0b11111111;
+//	datauartEncoder[9]=((uint64_t)ThetaPre>>32)&0b11111111;
+//	datauartEncoder[10]=((uint64_t)ThetaPre>>24)&0b11111111;
+//	datauartEncoder[11]=((uint64_t)ThetaPre>>16)&0b11111111;
+//	datauartEncoder[12]=((uint64_t)ThetaPre>>8)&0b11111111;
+//	datauartEncoder[13]=(uint64_t)ThetaPre&0b11111111;
+//
+//	datauartEncoder[17]=OmegaPre;
+	value=htim2.Instance->CNT;
+	datauartEncoder[6]=(value&0b1111111100000000) >>8;
+	datauartEncoder[7]=value&0b11111111;
+
+	HAL_UART_Transmit_IT(&huart2, datauartEncoder, sizeof(datauartEncoder));
+
+
 	q=(q+1)%255;
 
 
